@@ -6,10 +6,13 @@
   </head>
   <body>
     <h1>MoviesCollection</h1>
-    <a href="/admin/movies/movie/add/">Add New Movie</a>
+    <p><a href="/add/">Add New Movie</a></p>
     <ul>
       {% for movie in movies %}
-        <li>{{ movie.title }} ({{ movie.year }}) - {{ movie.genre }} - {{ movie.director }}</li>
+        <li>
+          {{ movie.title }} ({{ movie.year }}) - {{ movie.genre }} - {{ movie.director }}
+          <a href="/delete/{{ movie.id }}/">Delete</a>
+        </li>
       {% empty %}
         <li>No movies yet.</li>
       {% endfor %}
