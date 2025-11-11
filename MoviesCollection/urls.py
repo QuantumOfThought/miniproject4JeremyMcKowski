@@ -1,3 +1,7 @@
+### INF601 - Advanced Programming in Python
+### Jeremy McKowski
+### Mini Project 4
+
 """
 URL configuration for MoviesCollection project.
 

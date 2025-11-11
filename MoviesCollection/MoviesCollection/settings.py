@@ -1,8 +1,6 @@
-"""
-Django settings for MoviesCollection project.
-Generated manually for INF601 - Advanced Programming in Python
-Jeremy McKowski
-"""
+### INF601 - Advanced Programming in Python
+### Jeremy McKowski
+### Mini Project 4
 
 from pathlib import Path
 

@@ -1,3 +1,8 @@
+### INF601 - Advanced Programming in Python
+### Jeremy McKowski
+### Mini Project 4
+
+
 from django.contrib import admin
 from django.urls import path
 from movies import views
