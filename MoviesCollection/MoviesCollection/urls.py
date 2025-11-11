@@ -2,15 +2,14 @@
 ### Jeremy McKowski
 ### Mini Project 4
 
-
-from django.contrib import admin
 from django.urls import path
-from movies import views
+from . import views
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("", views.home, name="home"),
-    path("add/", views.add_movie, name="add_movie"),
-    path("delete/<int:movie_id>/", views.delete_movie, name="delete_movie"),
-    path("edit/<int:movie_id>/", views.edit_movie, name="edit_movie"),
+    path('', views.home, name='home'),
+    path('add/', views.add_movie, name='add_movie'),
+    path('<int:pk>/', views.movie_detail, name='movie_detail'),
+    path('<int:pk>/edit/', views.edit_movie, name='edit_movie'),
+    path('<int:pk>/delete/', views.delete_movie, name='delete_movie'),
+    path('my-movies/', views.my_movies, name='my_movies'),
 ]
