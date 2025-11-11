@@ -1,22 +1,132 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>MoviesCollection</title>
-  </head>
-  <body>
-    <h1>MoviesCollection</h1>
-    <p><a href="/add/">Add New Movie</a></p>
-    <ul>
-      {% for movie in movies %}
-        <li>
-          {{ movie.title }} ({{ movie.year }}) - {{ movie.genre }} - {{ movie.director }}
-            <a href="/edit/{{ movie.id }}/">Edit</a>
-            <a href="/delete/{{ movie.id }}/">Delete</a>
-        </li>
-      {% empty %}
-        <li>No movies yet.</li>
-      {% endfor %}
-    </ul>
-  </body>
-</html>
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-4 mb-4">
+            <i class="bi bi-film"></i> Welcome to Movies Collection
+        </h1>
+        <p class="lead mb-4">Track, rate, and organize your personal movie collection</p>
+        {% if not user.is_authenticated %}
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'register' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-person-plus"></i> Get Started
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+            </div>
+        {% else %}
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'add_movie' %}" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add Your First Movie
+                </a>
+                <a href="{% url 'my_movies' %}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-collection"></i> View My Collection
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<div class="container">
+    <!-- Statistics Section -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card stats-card text-center p-4">
+                <div class="card-body">
+                    <i class="bi bi-collection display-4 mb-3"></i>
+                    <h3 class="card-title">{{ total_movies }}</h3>
+                    <p class="card-text">Total Movies</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white text-center p-4">
+                <div class="card-body">
+                    <i class="bi bi-people display-4 mb-3"></i>
+                    <h3 class="card-title">Active Users</h3>
+                    <p class="card-text">Join the community!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white text-center p-4">
+                <div class="card-body">
+                    <i class="bi bi-star display-4 mb-3"></i>
+                    <h3 class="card-title">Reviews</h3>
+                    <p class="card-text">Rate & Review</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Movies Section -->
+    {% if movies %}
+        <section class="mb-5">
+            <h2 class="text-center mb-4">
+                <i class="bi bi-clock-history"></i> Recently Added Movies
+            </h2>
+            <div class="row">
+                {% for movie in movies %}
+                    <div class="col-lg-6 mb-4">
+                        <div class="card movie-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title">{{ movie.title }}</h5>
+                                    <span class="badge bg-primary">{{ movie.year }}</span>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <span class="star-rating">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= movie.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star empty-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                    <small class="text-muted ms-2">({{ movie.rating }}/5)</small>
+                                </div>
+                                
+                                {% if movie.genre %}
+                                    <p class="card-text">
+                                        <i class="bi bi-tag"></i> {{ movie.genre }}
+                                        {% if movie.director %} • <i class="bi bi-person"></i> {{ movie.director }}{% endif %}
+                                    </p>
+                                {% endif %}
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> {{ movie.owner.username }}
+                                    </small>
+                                    <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% else %}
+        <section class="text-center py-5">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="bi bi-film display-1 text-muted mb-4"></i>
+                    <h3 class="text-muted">No movies added yet</h3>
+                    <p class="text-muted">Be the first to add a movie to the collection!</p>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'add_movie' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add First Movie
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

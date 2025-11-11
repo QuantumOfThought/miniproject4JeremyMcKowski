@@ -2,73 +2,152 @@
 ### Jeremy McKowski
 ### Mini Project 4
 
-from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Q
+from .models import Movie
+from .forms import MovieForm
 
 
-class CustomUserCreationForm(UserCreationForm):
+def home(request):
     """
-    Enhanced user registration form with additional fields and Bootstrap styling.
+    Home page showing recent movies from all users (public view).
     """
+    movies = Movie.objects.all()[:10]  # Show latest 10 movies
+    context = {
+        'movies': movies,
+        'total_movies': Movie.objects.count(),
+        'page_title': 'Welcome to Movies Collection'
+    }
+    return render(request, 'movies/home.html', context)
 
-    email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter your email address'
-        })
-    )
 
-    first_name = forms.CharField(
-        max_length=30,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'First name (optional)'
-        })
-    )
+@login_required
+def my_movies(request):
+    """
+    Display current user's movie collection with search and filtering.
+    """
+    movies_list = Movie.objects.filter(owner=request.user)
 
-    last_name = forms.CharField(
-        max_length=30,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Last name (optional)'
-        })
-    )
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        movies_list = movies_list.filter(
+            Q(title__icontains=search_query) |
+            Q(genre__icontains=search_query) |
+            Q(director__icontains=search_query)
+        )
 
-    class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+    # Filter by rating
+    rating_filter = request.GET.get('rating', '')
+    if rating_filter:
+        movies_list = movies_list.filter(rating=rating_filter)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    # Sort options
+    sort_by = request.GET.get('sort', '-date_watched')
+    valid_sorts = ['-date_watched', 'date_watched', 'title', '-title', 'rating', '-rating', 'year', '-year']
+    if sort_by in valid_sorts:
+        movies_list = movies_list.order_by(sort_by)
 
-        # Add Bootstrap classes to inherited fields
-        self.fields['username'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Choose a username'
-        })
-        self.fields['password1'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Create a password'
-        })
-        self.fields['password2'].widget.attrs.update({
-            'class': 'form-control',
-            'placeholder': 'Confirm your password'
-        })
+    # Pagination
+    paginator = Paginator(movies_list, 12)  # 12 movies per page
+    page_number = request.GET.get('page')
+    movies = paginator.get_page(page_number)
 
-        # Update labels
-        self.fields['username'].label = 'Username'
-        self.fields['password1'].label = 'Password'
-        self.fields['password2'].label = 'Confirm Password'
+    context = {
+        'movies': movies,
+        'search_query': search_query,
+        'rating_filter': rating_filter,
+        'sort_by': sort_by,
+        'page_title': 'My Movie Collection'
+    }
+    return render(request, 'movies/my_movies.html', context)
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        user.first_name = self.cleaned_data['first_name']
-        user.last_name = self.cleaned_data['last_name']
-        if commit:
-            user.save()
-        return user
+
+@login_required
+def add_movie(request):
+    """
+    Add a new movie to user's collection.
+    """
+    if request.method == 'POST':
+        form = MovieForm(request.POST)
+        if form.is_valid():
+            movie = form.save(commit=False)
+            movie.owner = request.user
+            movie.save()
+            messages.success(request, f'"{movie.title}" has been added to your collection!')
+            return redirect('my_movies')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = MovieForm()
+
+    context = {
+        'form': form,
+        'page_title': 'Add New Movie',
+        'form_title': 'Add Movie to Collection'
+    }
+    return render(request, 'movies/movie_form.html', context)
+
+
+def movie_detail(request, pk):
+    """
+    Display detailed view of a single movie.
+    """
+    movie = get_object_or_404(Movie, pk=pk)
+
+    # Check if current user owns this movie
+    is_owner = request.user.is_authenticated and movie.owner == request.user
+
+    context = {
+        'movie': movie,
+        'is_owner': is_owner,
+        'page_title': f'{movie.title} ({movie.year})'
+    }
+    return render(request, 'movies/movie_detail.html', context)
+
+
+@login_required
+def edit_movie(request, pk):
+    """
+    Edit an existing movie (only by owner).
+    """
+    movie = get_object_or_404(Movie, pk=pk, owner=request.user)
+
+    if request.method == 'POST':
+        form = MovieForm(request.POST, instance=movie)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'"{movie.title}" has been updated successfully!')
+            return redirect('movie_detail', pk=movie.pk)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = MovieForm(instance=movie)
+
+    context = {
+        'form': form,
+        'movie': movie,
+        'page_title': f'Edit {movie.title}',
+        'form_title': f'Edit "{movie.title}"'
+    }
+    return render(request, 'movies/movie_form.html', context)
+
+
+@login_required
+def delete_movie(request, pk):
+    """
+    Delete a movie (only by owner) - handled via AJAX/modal.
+    """
+    movie = get_object_or_404(Movie, pk=pk, owner=request.user)
+
+    if request.method == 'POST':
+        title = movie.title
+        movie.delete()
+        messages.success(request, f'"{title}" has been deleted from your collection.')
+        return redirect('my_movies')
+
+    # If GET request, redirect to movie detail
+    return redirect('movie_detail', pk=pk)

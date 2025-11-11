@@ -2,14 +2,30 @@
 ### Jeremy McKowski
 ### Mini Project 4
 
-from django.urls import path
-from . import views
+"""
+URL configuration for MoviesCollection project.
+Includes authentication and movie management routes.
+"""
+
+from django.contrib import admin
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from movies import views as movie_views
+from accounts import views as account_views
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('add/', views.add_movie, name='add_movie'),
-    path('<int:pk>/', views.movie_detail, name='movie_detail'),
-    path('<int:pk>/edit/', views.edit_movie, name='edit_movie'),
-    path('<int:pk>/delete/', views.delete_movie, name='delete_movie'),
-    path('my-movies/', views.my_movies, name='my_movies'),
+    # Admin
+    path('admin/', admin.site.urls),
+
+    # Main pages
+    path('', movie_views.home, name='home'),
+    path('movies/', include('movies.urls')),
+
+    # Authentication
+    path('auth/register/', account_views.register, name='register'),
+    path('auth/login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('auth/logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+    # Profile
+    path('profile/', account_views.profile, name='profile'),
 ]

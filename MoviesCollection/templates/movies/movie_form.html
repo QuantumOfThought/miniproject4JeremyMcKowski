@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-film"></i> {{ form_title|default:"Movie Form" }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Title -->
+                            <div class="col-md-8 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    {{ form.title.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Year -->
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.year.id_for_label }}" class="form-label">
+                                    {{ form.year.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.year }}
+                                {% if form.year.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.year.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Genre -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.genre.id_for_label }}" class="form-label">
+                                    {{ form.genre.label }}
+                                </label>
+                                {{ form.genre }}
+                                {% if form.genre.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.genre.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Director -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.director.id_for_label }}" class="form-label">
+                                    {{ form.director.label }}
+                                </label>
+                                {{ form.director }}
+                                {% if form.director.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.director.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Rating -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.rating.id_for_label }}" class="form-label">
+                                    {{ form.rating.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.rating }}
+                                <div class="form-text">Rate from 1 (poor) to 5 (excellent) stars</div>
+                                {% if form.rating.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.rating.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Date Watched -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_watched.id_for_label }}" class="form-label">
+                                    {{ form.date_watched.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date_watched }}
+                                {% if form.date_watched.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.date_watched.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            <div class="form-text">Share your thoughts about this movie (optional)</div>
+                            {% if form.notes.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'my_movies' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Collection
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if movie %}Update Movie{% else %}Add Movie{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

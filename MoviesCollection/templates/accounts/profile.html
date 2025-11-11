@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Profile Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-1">
+                        <i class="bi bi-person-circle text-primary"></i> 
+                        {% if user.first_name and user.last_name %}
+                            {{ user.first_name }} {{ user.last_name }}
+                        {% else %}
+                            {{ user.username }}
+                        {% endif %}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-at"></i> {{ user.username }}
+                        {% if user.email %} • <i class="bi bi-envelope"></i> {{ user.email }}{% endif %}
+                    </p>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar"></i> Member since {{ user.date_joined|date:"F Y" }}
+                    </small>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{% url 'my_movies' %}" class="btn btn-primary">
+                        <i class="bi bi-collection"></i> View My Movies
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-lg-8">
+            <div class="row mb-4">
+                <!-- Total Movies -->
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-primary text-white text-center">
+                        <div class="card-body">
+                            <i class="bi bi-film display-4 mb-2"></i>
+                            <h3 class="card-title">{{ total_movies }}</h3>
+                            <p class="card-text">Total Movies</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Average Rating -->
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-warning text-dark text-center">
+                        <div class="card-body">
+                            <i class="bi bi-star-fill display-4 mb-2"></i>
+                            <h3 class="card-title">{{ avg_rating }}</h3>
+                            <p class="card-text">Average Rating</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Favorite Genre -->
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-info text-white text-center">
+                        <div class="card-body">
+                            <i class="bi bi-tag-fill display-4 mb-2"></i>
+                            <h5 class="card-title">
+                                {% if favorite_genres %}
+                                    {{ favorite_genres.0.genre|default:"Mixed" }}
+                                {% else %}
+                                    None Yet
+                                {% endif %}
+                            </h5>
+                            <p class="card-text">Top Genre</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Movies -->
+            {% if recent_movies %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history"></i> Recently Added Movies
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for movie in recent_movies %}
+                            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                                <div>
+                                    <h6 class="mb-1">{{ movie.title }} ({{ movie.year }})</h6>
+                                    <small class="text-muted">
+                                        <span class="star-rating">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= movie.rating %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star empty-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        • {{ movie.date_watched|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                                <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'my_movies' %}" class="btn btn-primary">
+                            <i class="bi bi-collection"></i> View All Movies
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-film display-1 text-muted mb-3"></i>
+                        <h4 class="text-muted">No movies yet</h4>
+                        <p class="text-muted">Start building your collection!</p>
+                        <a href="{% url 'add_movie' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add Your First Movie
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Favorite Genres -->
+            {% if favorite_genres %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-bar-chart"></i> Favorite Genres
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for genre_stat in favorite_genres %}
+                            {% if genre_stat.genre %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>{{ genre_stat.genre }}</span>
+                                    <span class="badge bg-primary">{{ genre_stat.count }}</span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'add_movie' %}" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Add New Movie
+                        </a>
+                        <a href="{% url 'my_movies' %}" class="btn btn-primary">
+                            <i class="bi bi-collection"></i> Browse Collection
+                        </a>
+                        {% if user.is_staff %}
+                            <a href="/admin/" class="btn btn-secondary">
+                                <i class="bi bi-gear"></i> Admin Panel
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

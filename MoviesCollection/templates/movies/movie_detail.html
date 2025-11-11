@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-film"></i> {{ movie.title }}
+                        </h3>
+                        <span class="badge bg-primary fs-6">{{ movie.year }}</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Rating Section -->
+                    <div class="text-center mb-4 p-3 bg-light rounded">
+                        <h4 class="text-muted mb-2">Rating</h4>
+                        <div class="star-rating fs-2 mb-2">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= movie.rating %}
+                                    <i class="bi bi-star-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-star empty-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="lead mb-0">{{ movie.rating }}/5 Stars</p>
+                    </div>
+                    
+                    <!-- Movie Details -->
+                    <div class="row mb-4">
+                        {% if movie.genre %}
+                            <div class="col-md-6 mb-3">
+                                <h5><i class="bi bi-tag text-primary"></i> Genre</h5>
+                                <p class="text-muted">{{ movie.genre }}</p>
+                            </div>
+                        {% endif %}
+                        
+                        {% if movie.director %}
+                            <div class="col-md-6 mb-3">
+                                <h5><i class="bi bi-person text-secondary"></i> Director</h5>
+                                <p class="text-muted">{{ movie.director }}</p>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="col-md-6 mb-3">
+                            <h5><i class="bi bi-calendar text-info"></i> Date Watched</h5>
+                            <p class="text-muted">{{ movie.date_watched|date:"F d, Y" }}</p>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <h5><i class="bi bi-person-circle text-success"></i> Added By</h5>
+                            <p class="text-muted">{{ movie.owner.username }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes Section -->
+                    {% if movie.notes %}
+                        <div class="mb-4">
+                            <h5><i class="bi bi-chat-quote text-warning"></i> Review Notes</h5>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-0 fst-italic">"{{ movie.notes }}"</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Metadata -->
+                    <div class="row text-muted small mb-4">
+                        <div class="col-md-6">
+                            <i class="bi bi-clock"></i> Added: {{ movie.created_at|date:"M d, Y" }}
+                        </div>
+                        {% if movie.updated_at != movie.created_at %}
+                            <div class="col-md-6 text-md-end">
+                                <i class="bi bi-pencil"></i> Updated: {{ movie.updated_at|date:"M d, Y" }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'my_movies' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Collection
+                        </a>
+                        
+                        {% if is_owner %}
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'edit_movie' movie.pk %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> Edit Movie
+                                </a>
+                                <button type="button" class="btn btn-danger" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if is_owner %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete <strong>"{{ movie.title }}"</strong>?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'delete_movie' movie.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Delete Movie
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

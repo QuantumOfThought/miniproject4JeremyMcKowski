@@ -3,81 +3,72 @@
 ### Mini Project 4
 
 from django import forms
-from .models import Movie
-from datetime import date
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 
-class MovieForm(forms.ModelForm):
+class CustomUserCreationForm(UserCreationForm):
     """
-    Enhanced form for adding/editing movies with Bootstrap styling and validation.
+    Enhanced user registration form with additional fields and Bootstrap styling.
     """
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email address'
+        })
+    )
+
+    first_name = forms.CharField(
+        max_length=30,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'First name (optional)'
+        })
+    )
+
+    last_name = forms.CharField(
+        max_length=30,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Last name (optional)'
+        })
+    )
 
     class Meta:
-        model = Movie
-        fields = ['title', 'year', 'genre', 'director', 'rating', 'date_watched', 'notes']
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
 
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter movie title',
-                'required': True
-            }),
-            'year': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Release year (e.g., 2023)',
-                'min': 1900,
-                'max': date.today().year + 5,
-                'required': True
-            }),
-            'genre': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Genre (e.g., Action, Comedy, Drama)',
-            }),
-            'director': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Director name',
-            }),
-            'rating': forms.Select(attrs={
-                'class': 'form-select',
-                'required': True
-            }),
-            'date_watched': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date',
-                'required': True
-            }),
-            'notes': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'What did you think about this movie?',
-                'rows': 4
-            })
-        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        labels = {
-            'title': 'Movie Title',
-            'year': 'Release Year',
-            'genre': 'Genre',
-            'director': 'Director',
-            'rating': 'Your Rating',
-            'date_watched': 'Date Watched',
-            'notes': 'Your Review/Notes'
-        }
+        # Add Bootstrap classes to inherited fields
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Choose a username'
+        })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Create a password'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Confirm your password'
+        })
 
-    def clean_year(self):
-        """Validate year is reasonable"""
-        year = self.cleaned_data.get('year')
-        current_year = date.today().year
+        # Update labels
+        self.fields['username'].label = 'Username'
+        self.fields['password1'].label = 'Password'
+        self.fields['password2'].label = 'Confirm Password'
 
-        if year and (year < 1900 or year > current_year + 5):
-            raise forms.ValidationError(f"Year must be between 1900 and {current_year + 5}")
-
-        return year
-
-    def clean_date_watched(self):
-        """Validate date watched is not in future"""
-        date_watched = self.cleaned_data.get('date_watched')
-
-        if date_watched and date_watched > date.today():
-            raise forms.ValidationError("Date watched cannot be in the future")
-
-        return date_watched
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        if commit:
+            user.save()
+        return user
