@@ -8,7 +8,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import Movie
-from .forms import MovieForm
+from .forms import MovieForm, WatchlistForm
+
 
 
 def home(request):
@@ -151,3 +152,135 @@ def delete_movie(request, pk):
 
     # If GET request, redirect to movie detail
     return redirect('movie_detail', pk=pk)
+
+
+@login_required
+def watchlist(request):
+    """
+    Display user's watchlist movies.
+    """
+    watchlist_movies = Movie.objects.filter(owner=request.user, is_watchlist=True)
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        watchlist_movies = watchlist_movies.filter(
+            Q(title__icontains=search_query) |
+            Q(genre__icontains=search_query) |
+            Q(director__icontains=search_query)
+        )
+
+    # Sort options
+    sort_by = request.GET.get('sort', '-created_at')
+    valid_sorts = ['-created_at', 'created_at', 'title', '-title', 'year', '-year']
+    if sort_by in valid_sorts:
+        watchlist_movies = watchlist_movies.order_by(sort_by)
+
+    # Pagination
+    paginator = Paginator(watchlist_movies, 12)
+    page_number = request.GET.get('page')
+    movies = paginator.get_page(page_number)
+
+    context = {
+        'movies': movies,
+        'search_query': search_query,
+        'sort_by': sort_by,
+        'page_title': 'My Watchlist'
+    }
+    return render(request, 'movies/watchlist.html', context)
+
+
+@login_required
+def add_to_watchlist(request):
+    """
+    Add a movie to watchlist.
+    """
+    if request.method == 'POST':
+        form = WatchlistForm(request.POST)
+        if form.is_valid():
+            movie = form.save(commit=False)
+            movie.owner = request.user
+            movie.is_watchlist = True
+            movie.save()
+            messages.success(request, f'"{movie.title}" has been added to your watchlist!')
+            return redirect('watchlist')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = WatchlistForm()
+
+    context = {
+        'form': form,
+        'page_title': 'Add to Watchlist',
+        'form_title': 'Add Movie to Watchlist'
+    }
+    return render(request, 'movies/watchlist_form.html', context)
+
+
+@login_required
+def move_to_collection(request, pk):
+    """
+    Move a movie from watchlist to collection.
+    """
+    movie = get_object_or_404(Movie, pk=pk, owner=request.user, is_watchlist=True)
+
+    if request.method == 'POST':
+        form = MovieForm(request.POST, instance=movie)
+        if form.is_valid():
+            movie = form.save(commit=False)
+            movie.is_watchlist = False
+            movie.save()
+            messages.success(request, f'"{movie.title}" has been moved to your collection!')
+            return redirect('my_movies')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = MovieForm(instance=movie)
+
+    context = {
+        'form': form,
+        'movie': movie,
+        'page_title': f'Move {movie.title} to Collection',
+        'form_title': f'Complete details for "{movie.title}"'
+    }
+    return render(request, 'movies/movie_form.html', context)
+
+
+@login_required
+def dashboard(request):
+    """
+    Display user statistics dashboard.
+    """
+    user_movies = Movie.objects.filter(owner=request.user, is_watchlist=False)
+    watchlist_movies = Movie.objects.filter(owner=request.user, is_watchlist=True)
+
+    # Total statistics
+    total_movies = user_movies.count()
+    total_watchlist = watchlist_movies.count()
+
+    # Genre breakdown
+    genre_stats = user_movies.values('genre').annotate(
+        count=models.Count('genre')
+    ).order_by('-count')
+
+    # Rating distribution
+    rating_stats = user_movies.values('rating').annotate(
+        count=models.Count('rating')
+    ).order_by('rating')
+
+    # Average rating
+    avg_rating = user_movies.aggregate(avg_rating=models.Avg('rating'))['avg_rating'] or 0
+
+    # Recent movies
+    recent_movies = user_movies[:5]
+
+    context = {
+        'total_movies': total_movies,
+        'total_watchlist': total_watchlist,
+        'genre_stats': genre_stats,
+        'rating_stats': rating_stats,
+        'avg_rating': round(avg_rating, 1),
+        'recent_movies': recent_movies,
+        'page_title': 'Dashboard'
+    }
+    return render(request, 'movies/dashboard.html', context)

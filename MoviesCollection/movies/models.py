@@ -19,12 +19,21 @@ class Movie(models.Model):
     genre = models.CharField(max_length=100, blank=True, help_text="Genre (e.g., Action, Comedy)")
     director = models.CharField(max_length=150, blank=True, help_text="Director name")
 
+    # Watchlist flag - NEW FIELD
+    is_watchlist = models.BooleanField(default=False, help_text="Is this movie on the watchlist?")
+
     # User interaction
     rating = models.IntegerField(
         choices=[(i, f"{i} Star{'s' if i != 1 else ''}") for i in range(1, 6)],
-        help_text="Your rating (1-5 stars)"
+        help_text="Your rating (1-5 stars)",
+        null=True,  # Make nullable for watchlist movies
+        blank=True
     )
-    date_watched = models.DateField(help_text="When you watched it")
+    date_watched = models.DateField(
+        help_text="When you watched it",
+        null=True,  # Make nullable for watchlist movies
+        blank=True
+    )
     notes = models.TextField(blank=True, help_text="Your thoughts about the movie")
 
     # User relationship
@@ -40,6 +49,8 @@ class Movie(models.Model):
         verbose_name_plural = "Movies"
 
     def __str__(self):
+        if self.is_watchlist:
+            return f"{self.title} ({self.year}) - Watchlist"
         return f"{self.title} ({self.year}) - {self.rating}/5 stars"
 
     def get_absolute_url(self):
@@ -47,6 +58,8 @@ class Movie(models.Model):
 
     def get_star_display(self):
         """Return star rating as filled/empty stars"""
+        if not self.rating:
+            return "Not rated yet"
         filled_stars = '★' * self.rating
         empty_stars = '☆' * (5 - self.rating)
         return filled_stars + empty_stars
