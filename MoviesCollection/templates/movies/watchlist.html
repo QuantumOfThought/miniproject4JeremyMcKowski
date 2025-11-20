@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-bookmark"></i> My Watchlist
+        </h1>
+        <a href="{% url 'add_to_watchlist' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add to Watchlist
+        </a>
+    </div>
+
+    <!-- Search and Filter Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search Movies</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Title, genre, or director...">
+                </div>
+                <div class="col-md-4">
+                    <label for="sort" class="form-label">Sort By</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="-created_at" {% if sort_by == "-created_at" %}selected{% endif %}>Recently Added</option>
+                        <option value="created_at" {% if sort_by == "created_at" %}selected{% endif %}>Oldest First</option>
+                        <option value="title" {% if sort_by == "title" %}selected{% endif %}>Title A-Z</option>
+                        <option value="-title" {% if sort_by == "-title" %}selected{% endif %}>Title Z-A</option>
+                        <option value="-year" {% if sort_by == "-year" %}selected{% endif %}>Newest Release</option>
+                        <option value="year" {% if sort_by == "year" %}selected{% endif %}>Oldest Release</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="d-grid w-100">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Watchlist Movies Grid -->
+    {% if movies %}
+        <div class="row">
+            {% for movie in movies %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card movie-card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-1">{{ movie.title }}</h5>
+                                <span class="badge bg-warning text-dark">{{ movie.year }}</span>
+                            </div>
+                            
+                            <span class="badge bg-info mb-2 align-self-start">
+                                <i class="bi bi-bookmark"></i> Watchlist
+                            </span>
+                            
+                            <!-- Movie Info -->
+                            {% if movie.genre %}
+                                <p class="card-text small mb-1">
+                                    <i class="bi bi-tag text-primary"></i> {{ movie.genre }}
+                                </p>
+                            {% endif %}
+                            
+                            {% if movie.director %}
+                                <p class="card-text small mb-2">
+                                    <i class="bi bi-person text-secondary"></i> {{ movie.director }}
+                                </p>
+                            {% endif %}
+                            
+                            {% if movie.notes %}
+                                <p class="card-text small text-muted mb-3">
+                                    <i class="bi bi-chat-quote"></i> {{ movie.notes|truncatewords:15 }}
+                                </p>
+                            {% endif %}
+                            
+                            <!-- Date Added -->
+                            <p class="card-text small text-muted mb-3">
+                                <i class="bi bi-calendar-plus"></i> Added: {{ movie.created_at|date:"M d, Y" }}
+                            </p>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                                <a href="{% url 'move_to_collection' movie.pk %}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle"></i> Mark Watched
+                                </a>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ movie.pk }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delete Modal for this movie -->
+                    <div class="modal fade" id="deleteModal{{ movie.pk }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to remove <strong>"{{ movie.title }}"</strong> from your watchlist?</p>
+                                    <p class="text-muted small">This action cannot be undone.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <form method="POST" action="{% url 'delete_movie' movie.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-trash"></i> Delete Movie
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if movies.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if movies.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ movies.previous_page_number }}&search={{ search_query }}&sort={{ sort_by }}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in movies.paginator.page_range %}
+                        <li class="page-item {% if movies.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}&search={{ search_query }}&sort={{ sort_by }}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    
+                    {% if movies.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ movies.next_page_number }}&search={{ search_query }}&sort={{ sort_by }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="bi bi-bookmark display-1 text-muted mb-4"></i>
+                    <h3 class="text-muted">Your watchlist is empty</h3>
+                    <p class="text-muted">Add movies you want to watch!</p>
+                    <a href="{% url 'add_to_watchlist' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Your First Movie
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
