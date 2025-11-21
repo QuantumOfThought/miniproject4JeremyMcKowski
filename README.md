@@ -48,5 +48,4 @@ Inspiration, code snippets, etc.
 * [Bootstrap](https://getbootstrap.com/)
 * [Claude](https://claude.ai/share/b0cbb007-bd7d-4e6e-86e1-214a17774d01)
 * [Claude Assessment of Project](https://claude.ai/share/c31c0bc0-b763-448c-848d-9ab50c624545)
-* new claude chat'
-* 
+* [Additional Claude Chat] (https://claude.ai/share/f6a64ae7-4961-4e1c-b104-518ab19f8021)

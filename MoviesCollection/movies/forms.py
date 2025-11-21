@@ -98,12 +98,10 @@ class WatchlistForm(forms.ModelForm):
                 'placeholder': 'Enter movie title',
                 'required': True
             }),
-            'year': forms.NumberInput(attrs={
+            'year': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Release year (e.g., 2023)',
-                'min': 1900,
-                'max': date.today().year + 5,
-                'required': True
+                'maxlength': '4',
             }),
             'genre': forms.TextInput(attrs={
                 'class': 'form-control',
