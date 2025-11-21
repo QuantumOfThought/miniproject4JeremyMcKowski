@@ -2,12 +2,14 @@
 ### Jeremy McKowski
 ### Mini Project 4
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db import models
-from .forms import CustomUserCreationForm
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.db import models  # ADD THIS LINE
+from .models import Movie
+from .forms import MovieForm, WatchlistForm
 
 
 def register(request):
