@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h1>
+            <i class="bi bi-graph-up"></i> Dashboard
+        </h1>
+        <p class="text-muted">Your movie collection statistics</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <!-- Total Movies -->
+        <div class="col-md-4 mb-3">
+            <div class="card bg-primary text-white text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-film display-4 mb-2"></i>
+                    <h2 class="card-title display-4">{{ total_movies }}</h2>
+                    <p class="card-text">Movies Watched</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Watchlist Count -->
+        <div class="col-md-4 mb-3">
+            <div class="card bg-warning text-dark text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-bookmark display-4 mb-2"></i>
+                    <h2 class="card-title display-4">{{ total_watchlist }}</h2>
+                    <p class="card-text">Movies on Watchlist</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Average Rating -->
+        <div class="col-md-4 mb-3">
+            <div class="card bg-success text-white text-center h-100">
+                <div class="card-body">
+                    <i class="bi bi-star-fill display-4 mb-2"></i>
+                    <h2 class="card-title display-4">{{ avg_rating }}</h2>
+                    <p class="card-text">Average Rating</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Genre Breakdown -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Genre Breakdown
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if genre_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Genre</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for genre in genre_stats %}
+                                        {% if genre.genre %}
+                                            <tr>
+                                                <td>
+                                                    <i class="bi bi-tag-fill text-primary"></i> 
+                                                    {{ genre.genre }}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary">{{ genre.count }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        {% widthratio genre.count total_movies 100 as percentage %}
+                                                        <div class="progress-bar bg-info" role="progressbar" 
+                                                             style="width: {{ percentage }}%;" 
+                                                             aria-valuenow="{{ percentage }}" 
+                                                             aria-valuemin="0" 
+                                                             aria-valuemax="100">
+                                                            {{ percentage }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-tag display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No genre data available yet.</p>
+                            <a href="{% url 'add_movie' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Add Movies
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Rating Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if rating_stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Rating</th>
+                                        <th>Count</th>
+                                        <th>Distribution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rating in rating_stats %}
+                                        {% if rating.rating %}
+                                            <tr>
+                                                <td>
+                                                    <span class="star-rating">
+                                                        {% for i in "12345" %}
+                                                            {% if forloop.counter <= rating.rating %}
+                                                                <i class="bi bi-star-fill"></i>
+                                                            {% else %}
+                                                                <i class="bi bi-star empty-star"></i>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-warning text-dark">{{ rating.count }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        {% widthratio rating.count total_movies 100 as percentage %}
+                                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                                             style="width: {{ percentage }}%;" 
+                                                             aria-valuenow="{{ percentage }}" 
+                                                             aria-valuemin="0" 
+                                                             aria-valuemax="100">
+                                                            {{ percentage }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-star display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No rating data available yet.</p>
+                            <a href="{% url 'add_movie' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Add Movies
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Movies -->
+    {% if recent_movies %}
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Recently Watched Movies
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for movie in recent_movies %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                <div>
+                                    <h6 class="mb-1">{{ movie.title }} ({{ movie.year }})</h6>
+                                    <small class="text-muted">
+                                        <span class="star-rating">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= movie.rating %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star empty-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        • {{ movie.date_watched|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                                <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-lightning"></i> Quick Actions
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'add_movie' %}" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-circle"></i> Add Movie
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'add_to_watchlist' %}" class="btn btn-warning w-100">
+                        <i class="bi bi-bookmark-plus"></i> Add to Watchlist
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'my_movies' %}" class="btn btn-info w-100">
+                        <i class="bi bi-collection"></i> My Collection
+                    </a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="{% url 'watchlist' %}" class="btn btn-secondary w-100">
+                        <i class="bi bi-bookmark"></i> Watchlist
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

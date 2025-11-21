@@ -81,3 +81,59 @@ class MovieForm(forms.ModelForm):
             raise forms.ValidationError("Date watched cannot be in the future")
 
         return date_watched
+
+
+class WatchlistForm(forms.ModelForm):
+    """
+    Form for adding movies to watchlist (without rating/date/notes).
+    """
+
+    class Meta:
+        model = Movie
+        fields = ['title', 'year', 'genre', 'director', 'notes']
+
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter movie title',
+                'required': True
+            }),
+            'year': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Release year (e.g., 2023)',
+                'min': 1900,
+                'max': date.today().year + 5,
+                'required': True
+            }),
+            'genre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Genre (e.g., Action, Comedy, Drama)',
+            }),
+            'director': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Director name',
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Why do you want to watch this movie?',
+                'rows': 3
+            })
+        }
+
+        labels = {
+            'title': 'Movie Title',
+            'year': 'Release Year',
+            'genre': 'Genre',
+            'director': 'Director',
+            'notes': 'Notes'
+        }
+
+    def clean_year(self):
+        """Validate year is reasonable"""
+        year = self.cleaned_data.get('year')
+        current_year = date.today().year
+
+        if year and (year < 1900 or year > current_year + 5):
+            raise forms.ValidationError(f"Year must be between 1900 and {current_year + 5}")
+
+        return year
