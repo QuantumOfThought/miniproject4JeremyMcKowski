@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db import models
 from .models import Movie
 from .forms import MovieForm, WatchlistForm
 
